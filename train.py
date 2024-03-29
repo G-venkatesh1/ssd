@@ -54,9 +54,9 @@ def get_args():
     parser.add_argument("--nms-threshold", type=float, default=0.5)
     parser.add_argument("--num-workers", type=int, default=4)
 
-    parser.add_argument('--local_rank', default=0, type=int,
-                        help='Used for multi-process training. Can either be manually set ' +
-                             'or automatically set by using \'python -m multiproc\'.')
+    # parser.add_argument('--local_rank', default=0, type=int,
+    #                     help='Used for multi-process training. Can either be manually set ' +
+    #                          'or automatically set by using \'python -m multiproc\'.')
     parser.add_argument("-c","--config_path", type=str, required=True, help="Path to yaml configuration")
     parser.add_argument("--mtype", default="fp32_model", choices=["fp16_model","fp32_model","QDQ_model","evaluate_tvm","fp16_MP"])
     parser.add_argument("--deploy_cfg", default="config/tvm_cpu.py", type=str, help="deploy config path")
