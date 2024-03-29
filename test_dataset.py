@@ -8,7 +8,7 @@ import argparse
 import logging
 from src.dataset import CocoDataset
 from src.transform import SSDTransformer
-from src.model import SSD, ResNet 
+from src.model_baseline import SSD, ResNet 
 import cv2
 import shutil
 import yaml
