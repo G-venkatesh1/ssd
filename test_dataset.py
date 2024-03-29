@@ -8,7 +8,7 @@ import argparse
 import logging
 from src.dataset import CocoDataset
 from src.transform import SSDTransformer
-from src.model_post_process import SSD, ResNet 
+from src.model_optimise import SSD, ResNet 
 import cv2
 import shutil
 import yaml
@@ -33,8 +33,8 @@ from multiprocessing import Process
 import timm
 from PIL import Image
 
-from src.utils_post_process import generate_dboxes, Encoder, colors
-from src.model_post_process import SSD, ResNet
+from src.utils_optimise import generate_dboxes, Encoder, colors
+from src.model_optimise import SSD, ResNet
 from onnxruntime.quantization import QuantFormat, quantize_static
 from onnxruntime.quantization.quant_utils import QuantType
 
