@@ -7,6 +7,8 @@ from argparse import ArgumentParser
 import onnx
 import onnxruntime as ort
 
+import os
+os.environ['LOCAL_RANK'] = '0'
 
 import torch
 from torch.optim.lr_scheduler import MultiStepLR
