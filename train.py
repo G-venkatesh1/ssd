@@ -16,7 +16,7 @@ from torch.optim.lr_scheduler import MultiStepLR
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
-from src.model import SSD, ResNet 
+from src.model_baseline import SSD, ResNet 
 from src.utils import generate_dboxes, Encoder, coco_classes
 from src.transform import SSDTransformer
 from src.loss import Loss
