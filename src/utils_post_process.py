@@ -39,7 +39,26 @@ colors = [None, (39, 129, 113), (164, 80, 133), (83, 122, 114), (99, 81, 172), (
 
 
 class Encoder(object):
-    
+    """
+        Inspired by https://github.com/kuangliu/pytorch-src
+        Transform between (bboxes, lables) <-> SSD output
+
+        dboxes: default boxes in size 8732 x 4,
+            encoder: input ltrb format, output xywh format
+            decoder: input xywh format, output ltrb format
+
+        encode:
+            input  : bboxes_in (Tensor nboxes x 4), labels_in (Tensor nboxes)
+            output : bboxes_out (Tensor 8732 x 4), labels_out (Tensor 8732)
+            criteria : IoU threshold of bboexes
+
+        decode:
+            input  : bboxes_in (Tensor 8732 x 4), scores_in (Tensor 8732 x nitems)
+            output : bboxes_out (Tensor nboxes x 4), labels_out (Tensor nboxes)
+            criteria : IoU threshold of bboexes
+            max_output : maximum number of output bboxes
+    """
+
     def __init__(self, dboxes):
         self.dboxes = dboxes(order="ltrb")
         self.dboxes_xywh = dboxes(order="xywh").unsqueeze(dim=0)
@@ -83,7 +102,6 @@ class Encoder(object):
         bboxes_in = bboxes_in.permute(0, 2, 1)
         scores_in = scores_in.permute(0, 2, 1)
 
-
         bboxes_in[:, :, :2] = self.scale_xy * bboxes_in[:, :, :2]
         bboxes_in[:, :, 2:] = self.scale_wh * bboxes_in[:, :, 2:]
 
@@ -107,27 +125,31 @@ class Encoder(object):
         scores_out = []
         labels_out = []
 
+        
+
         for i, score in enumerate(scores_in.split(1, 1)):
             if i == 0:
                 continue
 
             score = score.squeeze(1)
+
             mask = score > 0.05
-            
+
             bboxes, score = bboxes_in[mask, :], score[mask]
             if score.size(0) == 0: continue
+
             score_sorted, score_idx_sorted = score.sort(dim=0)
 
+            # select max_output indices
             score_idx_sorted = score_idx_sorted[-max_num:]
             candidates = []
 
-            while score_idx_sorted.numel() > 0:
+            while score_idx_sorted.numel() > 1:
                 idx = score_idx_sorted[-1].item()
                 bboxes_sorted = bboxes[score_idx_sorted, :]
                 bboxes_idx = bboxes[idx, :].unsqueeze(dim=0)
                 iou_sorted = box_iou(bboxes_sorted, bboxes_idx).squeeze()
                 # we only need iou < nms_threshold
-                # score_idx_sorted = score_idx_sorted.rename(None)
                 score_idx_sorted = score_idx_sorted[iou_sorted < nms_threshold]
                 candidates.append(idx)
 
@@ -143,7 +165,7 @@ class Encoder(object):
                                              torch.cat(scores_out, dim=0)
 
         _, max_ids = scores_out.sort(dim=0)
-        max_ids = max_ids[-max_output:]
+        max_ids = max_ids[-max_output:].cpu()
         return bboxes_out[max_ids, :], labels_out[max_ids], scores_out[max_ids]
 
 
@@ -206,3 +228,166 @@ def generate_dboxes(model="ssd"):
         aspect_ratios = [[2,3], [2, 3], [2, 3], [2, 3], [2,3], [2,3]]
         dboxes = DefaultBoxes(figsize, feat_size, steps, scales, aspect_ratios)
     return dboxes
+
+
+# class DefaultBoxes_high_res(object):
+#   def __init__(self, fig_size1,fig_size2, feat_size, steps, scales, aspect_ratios, scale_xy=0.1, scale_wh=0.2):
+
+#       self.feat_size = feat_size
+#       self.fig_size1 = fig_size1
+#       self.fig_size2 = fig_size2
+
+#       self.scale_xy = scale_xy
+#       self.scale_wh = scale_wh
+
+#       self.steps = steps
+#       self.scales = scales
+
+#       fk1 = fig_size1 / np.array(steps)
+#       fk2 = fig_size2 / np.array(steps)
+#       self.aspect_ratios = aspect_ratios
+
+#       self.default_boxes = []
+
+#       self.default_boxes = []
+#       fk = fig_size1 / np.array(steps)
+#       # fig_size=300
+#       # kk=0
+#       # sum_=0
+#       # for idx, sfeat in enumerate(feat_size[0]):
+#           # print("idx",idx)
+#           # kk+=1
+#           # # print(sfeat)
+#           # sk1 = scales[idx] / fig_size
+#           # sk2 = scales[idx  1] / fig_size
+#           # sk3 = sqrt(sk1 * sk2)
+#           # all_sizes = [(sk1, sk1), (sk3, sk3)]
+
+#           # for alpha in aspect_ratios[idx]:
+#           #     w, h = sk1 * sqrt(alpha), sk1 / sqrt(alpha)
+#           #     all_sizes.append((w, h))
+#           #     all_sizes.append((h, w))
+#           # for w, h in all_sizes:
+#           #     n1,n2=[i for i in range(sfeat)],[i for i in range(sfeat)]
+#           #     for i, j in itertools.product(n1,n2):
+#           #         kk=1
+
+#           #     # for i, j in itertools.product(range(sfeat), repeat=2):
+#           #         cx, cy = (j + 0.5) / fk[idx], (i + 0.5) / fk[idx]
+#           #         self.default_boxes.append((cx, cy, w, h))
+#           # # break
+#           # print(kk)
+#           # sum_+=kk
+#           # kk=0
+#       # self.dboxes = torch.tensor(self.default_boxes, dtype=torch.float)
+#       # print(self.dboxes.shape)
+#       # print(sum_)
+#       # print()
+#       # print(idx,alpha,len(all_sizes))
+#       # exit()
+#       # for idx, (sfeat1,sfeat2) in enumerate(self.feat_size):
+#       # for idx2, sfeat in enumerate(self.feat_size):
+      
+#       kk=0
+#       sum_=0
+#       x_=[0,1,2,3,4,5]
+#       for idx, sfeat in enumerate(x_):#self.feat_size):
+#               sfeat1=self.feat_size[0][idx]
+#               sfeat2=self.feat_size[1][idx]
+#               kk+=1                
+#               # print("idx",idx)
+
+#               # sk1 = scales[idx] / fig_size1
+#               # sk2 = scales[idx + 1] / fig_size2                
+#               sk1 = scales[idx] / fig_size1
+#               sk2 = scales[idx + 1] / fig_size2
+#               sk3 = sqrt(sk1 * sk2)
+#               # all_sizes = [(sk1, sk1), (sk3, sk3)]
+#               all_sizes = [(sk1, sk2), (sk3, sk3)]
+
+#               for alpha in aspect_ratios[idx]:
+#                   w, h = sk1 * sqrt(alpha), sk2 / sqrt(alpha)
+#                   all_sizes.append((w, h))
+#                   all_sizes.append((h, w))
+
+#               for w, h in all_sizes:
+#                   # for i, j in itertools.product(range(sfeat), repeat=1):
+#                   n1,n2=[i for i in range(sfeat1)],[i for i in range(sfeat2)]#[1])]
+#                   for i, j in itertools.product(n1,n2):
+#                       kk+=1
+
+#                       cx, cy = (j + 0.5) / fk1[idx], (i + 0.5) / fk2[idx]
+#                       self.default_boxes.append((cx, cy, w, h))
+#               # break
+#               # print(kk,torch.tensor(self.default_boxes, dtype=torch.float).shape)
+#               sum_+=kk
+#               kk=0
+      
+#       # print(sum_)
+
+#       self.dboxes = torch.tensor(self.default_boxes, dtype=torch.float)
+#       # print("current : ",self.dboxes.shape,idx )
+#       # exit()
+#       self.dboxes.clamp_(min=0, max=1)
+#       self.dboxes_ltrb = box_convert(self.dboxes, in_fmt="cxcywh", out_fmt="xyxy")
+
+#   def __call__(self, order="ltrb"):
+#       if order == "ltrb":
+#           return self.dboxes_ltrb
+#       else:  # order == "xywh"
+#           return self.dboxes
+
+
+
+def generate_dboxes_high_res(model="ssd"):
+
+
+
+  # figsize1 = 300
+  # figsize2 = 300
+  # feat_size1 = [38, 19, 10, 5, 3, 1]
+  # feat_size2 = [38, 19, 10, 5, 3, 1]
+  # steps = [8, 16, 32, 64, 100, 300]
+  # scales = [21, 45, 99, 153, 207, 261, 315]
+  # aspect_ratios = [[2], [2, 3], [2, 3], [2, 3], [2], [2]]
+  # dboxes = DefaultBoxes(figsize, feat_size, steps, scales, aspect_ratios)
+
+
+  # 2mp
+  # figsize1 = 1080
+  # figsize2 = 1920
+  # feat_size1 = [240, 120, 60, 30, 28, 26]
+  # feat_size2 = [135, 68, 34, 17, 15, 13]
+  # steps = [16, 128, 256, 512, 1024, 1920]
+  
+
+
+
+
+  # # 5mp 
+  # figsize1 = 2048
+  # figsize2 = 2730
+  # feat_size2 = [342,171,86,43,41,39]
+  # feat_size1 = [256,128,64,32,30,28]
+  # steps = [16, 128, 512, 1024, 2048, 2730]
+
+  # 8mp 
+
+  figsize1 = 2160
+  figsize2 = 3840
+  feat_size2 = [480,240,120,60,58,56]
+  feat_size1 = [270,135,68,34,32,30]
+  steps = [128, 512, 1024, 2048, 3000, 3840]
+
+
+
+  
+  scales = [21, 45, 99, 153, 207, 261, 315]
+  aspect_ratios = [[2], [2, 3], [2, 3], [2, 3], [2], [2]]
+  print('jpp')
+  exit()
+  feat_size=[feat_size1,feat_size2]
+  dboxes = DefaultBoxes_high_res(figsize1,figsize2, feat_size, steps, scales, aspect_ratios)
+  
+  
+  return dboxes

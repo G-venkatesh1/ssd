@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 from torchvision.models.resnet import resnet50
 from torchvision.models.mobilenet import mobilenet_v2#, InvertedResidual
-from src.utils import generate_dboxes, Encoder
+from src.utils_post_process import generate_dboxes, Encoder
 
 class Base(nn.Module):
     def __init__(self):
