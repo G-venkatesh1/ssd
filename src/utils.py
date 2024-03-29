@@ -115,7 +115,7 @@ class Encoder(object):
             mask = score > 0.05
             
             bboxes, score = bboxes_in[mask, :], score[mask]
-            if score.size(0) == 0: continue
+            # if score.size(0) == 0: continue
             score_sorted, score_idx_sorted = score.sort(dim=0)
 
             score_idx_sorted = score_idx_sorted[-max_num:]
