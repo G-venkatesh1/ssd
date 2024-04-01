@@ -9,7 +9,7 @@ import onnxruntime as ort
 
 # import os
 # os.environ['LOCAL_RANK'] = '0'
-local_rank = os.environ.get('LOCAL_RANK', '0')
+# local_rank = os.environ.get('LOCAL_RANK', '0')
 
 import torch
 from torch.optim.lr_scheduler import MultiStepLR
@@ -79,7 +79,7 @@ def main(opt):
     else:
         torch.manual_seed(123)
         num_gpus = 1
-
+    local_rank = int(os.environ.get('LOCAL_RANK', 0))
     train_params = {"batch_size": opt.batch_size * num_gpus,
                     "shuffle": True,
                     "drop_last": False,
