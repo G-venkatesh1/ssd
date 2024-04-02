@@ -139,7 +139,7 @@ def evaluate(model, test_loader, epoch, writer, encoder, nms_threshold, mtype,rt
                 # print(ploc,len(label[0]),len(prob[0]),len(loc[0]))
                 # ploc, plabel = ploc.float(), plabel.float()
             # print(ploc,plabel)
-            for idx in enumerate(ploc):
+            for idx,_ in enumerate(ploc):
     #             # print("hi")
                 ploc_i = loc[idx, :, :].unsqueeze(0)
                 plabel_i = label[idx, :, :].unsqueeze(0)
