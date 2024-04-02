@@ -140,12 +140,13 @@ def evaluate(model, test_loader, epoch, writer, encoder, nms_threshold, mtype,rt
             for idx in range(ploc.shape[0]):
                 ploc_i = ploc[idx, :, :].unsqueeze(0)
                 plabel_i = plabel[idx, :, :].unsqueeze(0)
-                try:
-                    result = encoder.decode_batch(ploc_i, plabel_i, nms_threshold, 200)[0]
-                except:
-                    print("No object detected in idx: {}".format(idx))
-                    continue
+                # try:
+                result = encoder.decode_batch(ploc_i, plabel_i, nms_threshold, 200)[0]
+                # except:
+                    # print("No object detected in idx: {}".format(idx))
+                    # continue
                 if img_size is None: #change
+                    print("no image")
                     continue     
                 height, width = img_size[idx]                
                 loc, label, prob = [r.cpu().numpy() for r in result]
