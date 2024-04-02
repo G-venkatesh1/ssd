@@ -40,7 +40,7 @@ class Base(nn.Module):
         loc_list = []
         label_list = []
         prob_list = []
-
+        # detections = []
 
         if int(ploc.shape[0])>1:
             for idx in range(ploc.shape[0]):
@@ -63,7 +63,6 @@ class Base(nn.Module):
                 plabel_i = plabel[idx, :, :].unsqueeze(0)         
                 result = encoder.decode_batch(ploc_i, plabel_i, 0.5, 200)[0] # post process is included here
                 loc, label, prob = [r.cpu() for r in result]
-
                 return [loc], [label], [prob]
 
 class ResNet(nn.Module):
