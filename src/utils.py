@@ -127,7 +127,6 @@ class Encoder(object):
                 bboxes_idx = bboxes[idx, :].unsqueeze(dim=0)
                 iou_sorted = box_iou(bboxes_sorted, bboxes_idx).squeeze()
                 # we only need iou < nms_threshold
-                # score_idx_sorted = score_idx_sorted.rename(None)
                 score_idx_sorted = score_idx_sorted[iou_sorted < nms_threshold]
                 candidates.append(idx)
 

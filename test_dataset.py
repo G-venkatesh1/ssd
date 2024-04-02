@@ -42,13 +42,13 @@ logging.basicConfig(level="DEBUG")
 logger = logging.getLogger(__name__)
 global input_shape
 
-# COMMON_TRANSFORMS = [
-#     relay.transform.InferType(),
-#     relay.transform.SimplifyInference(),
-#     relay.transform.FakeQuantizationToInteger(
-#         hard_fail=False, optional_qnn_ops=["nn.softmax"]
-#     ),
-# ]
+COMMON_TRANSFORMS = [
+    relay.transform.InferType(),
+    relay.transform.SimplifyInference(),
+    relay.transform.FakeQuantizationToInteger(
+        hard_fail=False, optional_qnn_ops=["nn.softmax"]
+    ),
+]
 
 
 def read_config(config_path):
