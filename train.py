@@ -122,7 +122,7 @@ def main(opt):
     if not os.path.isdir(opt.save_folder):
         os.makedirs(opt.save_folder)
     
-    checkpoint_path = "trained_models/SSD.pth"
+    checkpoint_path = "/kaggle/input/ssd/pytorch/res_50/1/SSD.pth"
 
     writer = SummaryWriter(opt.log_path)
 
