@@ -136,7 +136,7 @@ def evaluate(model, test_loader, epoch, writer, encoder, nms_threshold, mtype,rt
                     plabel = torch.tensor(output2_np).cuda()
             elif rt == "val":
                 loc,label,prob = model(img)
-                # print(ploc.shape[0],len(plabel))
+                print(len(loc),len(label),len(prob))
                 # ploc, plabel = ploc.float(), plabel.float()
             # for idx in range(ploc.shape[0]):
             # ploc_i = ploc[0, :, :].unsqueeze(0)
@@ -150,12 +150,12 @@ def evaluate(model, test_loader, epoch, writer, encoder, nms_threshold, mtype,rt
                 # print("no image")
                 # continue     
             height, width = img_size[0]
-            print(len(loc),len(label))                
+            # print(len(loc),len(label))                
             # loc, label, prob = [r.cpu().numpy() for r in result]
             # for loc_, label_, prob_ in zip(loc, label, prob):
-            detections.append([img_id[0], loc[0] * width, loc[1] * height, (loc[2] - loc[0]) * width,
-                                    (loc[3] - loc[1]) * height, prob,
-                                    category_ids[label - 1]])
+            # detections.append([img_id[0], loc[0] * width, loc[1] * height, (loc[2] - loc[0]) * width,
+            #                         (loc[3] - loc[1]) * height, prob,
+            #                         category_ids[label - 1]])
 
     # detections = np.array(detections, dtype=np.float32)
 
