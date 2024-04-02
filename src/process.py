@@ -137,6 +137,8 @@ def evaluate(model, test_loader, epoch, writer, encoder, nms_threshold, mtype,rt
             elif rt == "val":
                 ploc, loc,label,prob = model(img)
                 loc = torch.stack(loc)
+                label = torch.stack(label)
+                prob=torch.stack(prob)
                 print(ploc)
                 # print(ploc,len(label[0]),len(prob[0]),len(loc[0]))
                 # ploc, plabel = ploc.float(), plabel.float()
