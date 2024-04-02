@@ -149,7 +149,8 @@ def evaluate(model, test_loader, epoch, writer, encoder, nms_threshold, mtype,rt
             # if img_size is None: #change
                 # print("no image")
                 # continue     
-            height, width = img_size[0]                
+            height, width = img_size[0]
+            print(loc.shape[0])                
             # loc, label, prob = [r.cpu().numpy() for r in result]
             for loc_, label_, prob_ in zip(loc, label, prob):
                  detections.append([img_id[0], loc_[0] * width, loc_[1] * height, (loc_[2] - loc_[0]) * width,
