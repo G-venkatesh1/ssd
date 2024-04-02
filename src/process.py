@@ -137,7 +137,7 @@ def evaluate(model, test_loader, epoch, writer, encoder, nms_threshold, mtype,rt
             elif rt == "val":
                 ploc,loc,label,prob = model(img)
                 # ploc, plabel = ploc.float(), plabel.float()
-            for idx in range(ploc.shape[0]):
+            for idx in range(len(ploc)):
                 # ploc_i = ploc[idx, :, :].unsqueeze(0)
                 # plabel_i = plabel[idx, :, :].unsqueeze(0)
                 # # try:
