@@ -153,11 +153,11 @@ def evaluate(model, test_loader, epoch, writer, encoder, nms_threshold, mtype,rt
                            category_ids[int(label_.item()) - 1]])
 
 
-    # detections = np.array(detections, dtype=np.float32)
+    detections = np.array(detections, dtype=np.float32)
 
-    # coco_eval = COCOeval(test_loader.dataset.coco, test_loader.dataset.coco.loadRes(detections), iouType="bbox")
-    # coco_eval.evaluate()
-    # coco_eval.accumulate()
-    # coco_eval.summarize()
+    coco_eval = COCOeval(test_loader.dataset.coco, test_loader.dataset.coco.loadRes(detections), iouType="bbox")
+    coco_eval.evaluate()
+    coco_eval.accumulate()
+    coco_eval.summarize()
 
-    # writer.add_scalar("Test/mAP", coco_eval.stats[0], epoch)
+    writer.add_scalar("Test/mAP", coco_eval.stats[0], epoch)
