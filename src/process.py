@@ -154,7 +154,7 @@ def evaluate(model, test_loader, epoch, writer, encoder, nms_threshold, mtype,rt
             for loc_, label_, prob_ in zip(loc, label, prob):
                  detections.append([img_id[0], loc_[0] * width, loc_[1] * height, (loc_[2] - loc_[0]) * width,
                                     (loc_[3] - loc_[1]) * height, prob_,
-                                    category_ids[label_[0] - 1]])
+                                    category_ids[label_ - 1]])
 
     detections = np.array(detections, dtype=np.float32)
 
