@@ -135,36 +135,32 @@ def evaluate(model, test_loader, epoch, writer, encoder, nms_threshold, mtype,rt
                     ploc = torch.tensor(output1_np).cuda()
                     plabel = torch.tensor(output2_np).cuda()
             elif rt == "val":
-                loc,label,prob = model(img)
-                print(len(loc[0]),len(label[0]),len(prob[0]))
-                # ploc, plabel = ploc.float(), plabel.float()
-            # for idx in range(ploc.shape[0]):
-            # ploc_i = ploc[0, :, :].unsqueeze(0)
-            # plabel_i = plabel[0, :, :].unsqueeze(0)
+                ploc, plabel = model(img)
+                ploc, plabel = ploc.float(), plabel.float()
+                print(ploc.shape[0])
+            for idx in range(ploc.shape[0]):
+                ploc_i = ploc[idx, :, :].unsqueeze(0)
+                plabel_i = plabel[idx, :, :].unsqueeze(0)
                 # try:
-            # result = encoder.decode_batch(ploc_i, plabel_i, nms_threshold, 200)[0]
+                result = encoder.decode_batch(ploc_i, plabel_i, nms_threshold, 200)[0]
                 # except:
                     # print("No object detected in idx: {}".format(idx))
                     # continue
-            # if img_size is None: #change
-                # print("no image")
-                # continue     
-            height, width = img_size[0]
-            # print(len(loc),len(label))                
-            # loc, label, prob = [r.cpu().numpy() for r in result]
-            for inf in range(len(loc[0])):
-                label_value = label[inf].item()
-                category_id = category_ids[label_value - 1]
-                detections.append([img_id[0], loc[inf][0] * width, loc[inf][1] * height, (loc[inf][2] - loc[inf][0]) * width,
-                        (loc[inf][3] - loc[inf][1]) * height, prob[inf], category_id])
+                if img_size is None: #change
+                    print("no image")
+                    continue     
+                height, width = img_size[idx]                
+                loc, label, prob = [r.cpu().numpy() for r in result]
+                for loc_, label_, prob_ in zip(loc, label, prob):
+                    detections.append([img_id[idx], loc_[0] * width, loc_[1] * height, (loc_[2] - loc_[0]) * width,
+                                    (loc_[3] - loc_[1]) * height, prob_,
+                                    category_ids[label_ - 1]])
 
+    detections = np.array(detections, dtype=np.float32)
 
+    coco_eval = COCOeval(test_loader.dataset.coco, test_loader.dataset.coco.loadRes(detections), iouType="bbox")
+    coco_eval.evaluate()
+    coco_eval.accumulate()
+    coco_eval.summarize()
 
-    # detections = np.array(detections, dtype=np.float32)
-
-    # coco_eval = COCOeval(test_loader.dataset.coco, test_loader.dataset.coco.loadRes(detections), iouType="bbox")
-    # coco_eval.evaluate()
-    # coco_eval.accumulate()
-    # coco_eval.summarize()
-
-    # writer.add_scalar("Test/mAP", coco_eval.stats[0], epoch)
+    writer.add_scalar("Test/mAP", coco_eval.stats[0], epoch)
