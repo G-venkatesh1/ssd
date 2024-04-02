@@ -145,7 +145,7 @@ def evaluate(model, test_loader, epoch, writer, encoder, nms_threshold, mtype,rt
                 img_id_i = img_id[idx]
                 img_size_i = img_size[idx]
     
-                height, width = img_size_i.item()  # Assuming img_size_i is a scalar tensor
+                height, width = img_size_i # Assuming img_size_i is a scalar tensor
     
                 for loc_, label_, prob_ in zip(ploc_i, plabel_i, pprob_i):
                      detections.append([img_id_i.item(), loc_[0] * width, loc_[1] * height, (loc_[2] - loc_[0]) * width,
