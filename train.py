@@ -72,6 +72,7 @@ def get_args():
 
 
 def main(opt):
+    print("inside main has reached")
     # if torch.cuda.is_available():
     #     torch.distributed.init_process_group(backend='nccl', init_method='env://')
     #     num_gpus = torch.distributed.get_world_size()
@@ -135,7 +136,7 @@ def main(opt):
         print("ONNX runtime")
     if opt.rt == "val":
         print("baseline validation")
-
+    print("evaluation part has reached")
     for epoch in range(first_epoch, opt.epochs):
         evaluate(model, test_loader, epoch, writer, encoder, opt.nms_threshold,opt.mtype,opt.rt,config,opt.deploy_cfg,opt.subset)
 
