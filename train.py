@@ -72,14 +72,14 @@ def get_args():
 
 
 def main(opt):
-    if torch.cuda.is_available():
-        torch.distributed.init_process_group(backend='nccl', init_method='env://')
-        num_gpus = torch.distributed.get_world_size()
-        torch.cuda.manual_seed(123)
-    else:
-        torch.manual_seed(123)
-        num_gpus = 1
-    # num_gpus=1
+    # if torch.cuda.is_available():
+    #     torch.distributed.init_process_group(backend='nccl', init_method='env://')
+    #     num_gpus = torch.distributed.get_world_size()
+    #     torch.cuda.manual_seed(123)
+    # else:
+    #     torch.manual_seed(123)
+    #     num_gpus = 1
+    num_gpus=1
     # local_rank = int(os.environ.get('LOCAL_RANK', 0))
     train_params = {"batch_size": opt.batch_size * num_gpus,
                     "shuffle": True,
