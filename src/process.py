@@ -135,22 +135,22 @@ def evaluate(model, test_loader, epoch, writer, encoder, nms_threshold, mtype,rt
                     ploc = torch.tensor(output1_np).cuda()
                     plabel = torch.tensor(output2_np).cuda()
             elif rt == "val":
-                ploc, plabel = model(img)
+                loc,label,prob = model(img)
                 # print(ploc.shape[0],len(plabel))
-                ploc, plabel = ploc.float(), plabel.float()
+                # ploc, plabel = ploc.float(), plabel.float()
             # for idx in range(ploc.shape[0]):
-            ploc_i = ploc[0, :, :].unsqueeze(0)
-            plabel_i = plabel[0, :, :].unsqueeze(0)
+            # ploc_i = ploc[0, :, :].unsqueeze(0)
+            # plabel_i = plabel[0, :, :].unsqueeze(0)
                 # try:
-            result = encoder.decode_batch(ploc_i, plabel_i, nms_threshold, 200)[0]
+            # result = encoder.decode_batch(ploc_i, plabel_i, nms_threshold, 200)[0]
                 # except:
                     # print("No object detected in idx: {}".format(idx))
                     # continue
-            if img_size is None: #change
-                print("no image")
-                continue     
+            # if img_size is None: #change
+                # print("no image")
+                # continue     
             height, width = img_size[0]                
-            loc, label, prob = [r.cpu().numpy() for r in result]
+            # loc, label, prob = [r.cpu().numpy() for r in result]
             for loc_, label_, prob_ in zip(loc, label, prob):
                  detections.append([img_id[0], loc_[0] * width, loc_[1] * height, (loc_[2] - loc_[0]) * width,
                                     (loc_[3] - loc_[1]) * height, prob_,
