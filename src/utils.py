@@ -143,6 +143,7 @@ class Encoder(object):
 
         _, max_ids = scores_out.sort(dim=0)
         max_ids = max_ids[-max_output:]
+        max_ids = max_ids.cpu()
         return bboxes_out[max_ids, :], labels_out[max_ids], scores_out[max_ids]
 
 
