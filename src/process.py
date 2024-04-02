@@ -156,8 +156,6 @@ def evaluate(model, test_loader, epoch, writer, encoder, nms_threshold, mtype,rt
                     detections.append([img_id[idx], loc_[0] * width, loc_[1] * height, (loc_[2] - loc_[0]) * width,
                                     (loc_[3] - loc_[1]) * height, prob_,
                                     category_ids[label_ - 1]])
-                    print("add det")
-                break
 
     detections = np.array(detections, dtype=np.float32)
 
