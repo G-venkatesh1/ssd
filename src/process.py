@@ -89,7 +89,6 @@ def evaluate(model, test_loader, epoch, writer, encoder, nms_threshold, mtype,rt
                 mod = remote.load_module("model.tar")
                 module = graph_executor.GraphModule(mod["default"](dev))      
     detections = []
-    i=0
     category_ids = test_loader.dataset.coco.getCatIds()
     for nbatch, (img, img_id, img_size, _) in enumerate(test_loader):   
         print("Parsing batch: {}/{}".format(nbatch, len(test_loader)), end="\r")
@@ -136,10 +135,8 @@ def evaluate(model, test_loader, epoch, writer, encoder, nms_threshold, mtype,rt
                     ploc = torch.tensor(output1_np).cuda()
                     plabel = torch.tensor(output2_np).cuda()
             elif rt == "val":
-                i=i+1
-                print(i)
                 loc,label,prob = model(img)
-                print(loc,label,prob)
+                print(len(loc[0]),len(label[0]),len(prob[0]))
                 # ploc, plabel = ploc.float(), plabel.float()
             # for idx in range(ploc.shape[0]):
             # ploc_i = ploc[0, :, :].unsqueeze(0)
