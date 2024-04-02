@@ -79,7 +79,7 @@ def evaluate(model, test_loader, epoch, writer, encoder, nms_threshold, mtype,rt
             tvm_config = deploy_cfg["tvm_config"]
             if not (host and port):
                 dev = tvm.device(str(tvm_config["targets"][0]), 0)
-                print(dev)
+                # print(dev)
                 lib: tvm.runtime.Module = tvm.runtime.load_module("tvm/SSDRes50_quant.tar")
                 module = graph_executor.GraphModule(lib["default"](dev))
             else:
