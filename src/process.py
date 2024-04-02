@@ -135,6 +135,7 @@ def evaluate(model, test_loader, epoch, writer, encoder, nms_threshold, mtype,rt
                     ploc = torch.tensor(output1_np).cuda()
                     plabel = torch.tensor(output2_np).cuda()
             elif rt == "val":
+                print(model(img))
                 ploc, plabel = model(img)
                 ploc, plabel = ploc.float(), plabel.float()
             for idx in range(ploc.shape[0]):
