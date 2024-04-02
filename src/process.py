@@ -153,9 +153,10 @@ def evaluate(model, test_loader, epoch, writer, encoder, nms_threshold, mtype,rt
             # print(len(loc),len(label))                
             # loc, label, prob = [r.cpu().numpy() for r in result]
             # for loc_, label_, prob_ in zip(loc, label, prob):
-            # detections.append([img_id[0], loc[0] * width, loc[1] * height, (loc[2] - loc[0]) * width,
-            #                         (loc[3] - loc[1]) * height, prob,
-            #                         category_ids[label - 1]])
+            for inf in range(len(loc[0])):
+                detections.append([img_id[0], loc[inf][0] * width, loc[inf][1] * height, (loc[inf][2] - loc[inf][0]) * width,
+                                    (loc[inf][3] - loc[inf][1]) * height, prob[inf],
+                                    category_ids[label[inf] - 1]])
 
     # detections = np.array(detections, dtype=np.float32)
 
