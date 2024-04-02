@@ -52,7 +52,7 @@ class Base(nn.Module):
                 label_list.append(label_i)
                 prob_list.append(prob_i)
               
-            return loc_list, label_list, prob_list
+            return ploc,loc_list, label_list, prob_list
 
         else:       
             for idx in range(ploc.shape[0]):
@@ -63,7 +63,7 @@ class Base(nn.Module):
                 plabel_i = plabel[idx, :, :].unsqueeze(0)         
                 result = encoder.decode_batch(ploc_i, plabel_i, 0.5, 200)[0] # post process is included here
                 loc, label, prob = [r.cpu() for r in result]
-                return [loc], [label], [prob]
+                return [ploc],[loc], [label], [prob]
 
 class ResNet(nn.Module):
     def __init__(self):
@@ -135,8 +135,8 @@ class SSD(Base):
         for l in self.additional_blocks:
             x = l(x)
             detection_feed.append(x)
-        locs, confs, probs = self.bbox_view(detection_feed, self.loc, self.conf)
-        return locs, confs, probs
+        ploc,locs, confs, probs = self.bbox_view(detection_feed, self.loc, self.conf)
+        return ploc,locs, confs, probs
 
 
 feature_maps = {}
