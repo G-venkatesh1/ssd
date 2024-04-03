@@ -138,26 +138,39 @@ def evaluate(model, test_loader, epoch, writer, encoder, nms_threshold, mtype,rt
                     plabel = torch.tensor(output2_np).cuda()
             elif rt == "val":
                 start_time = time.time()
-                ploc, plabel = model(img)
+                ploc,loc,label,prob = model(img)
+                # ploc, plabel = model(img)
                 end_time = time.time()
                 inf_time = inf_time + (end_time-start_time)
-                ploc, plabel = ploc.float(), plabel.float()
-            for idx in range(ploc.shape[0]):
-                ploc_i = ploc[idx, :, :].unsqueeze(0)
-                plabel_i = plabel[idx, :, :].unsqueeze(0)
-                try:
-                    result = encoder.decode_batch(ploc_i, plabel_i, nms_threshold, 200)[0]
-                except:
-                    print("No object detected in idx: {}".format(idx))
-                    continue
-                if img_size is None: #change
-                    continue     
-                height, width = img_size[idx]                
-                loc, label, prob = [r.cpu().numpy() for r in result]
-                for loc_, label_, prob_ in zip(loc, label, prob):
-                    detections.append([img_id[idx], loc_[0] * width, loc_[1] * height, (loc_[2] - loc_[0]) * width,
-                                    (loc_[3] - loc_[1]) * height, prob_,
-                                    category_ids[label_ - 1]])
+                # ploc, plabel = ploc.float(), plabel.float()
+            for idx in range(len(ploc)):
+                ploc_i = loc[idx]
+                plabel_i = label[idx]
+                pprob_i = prob[idx]
+    # Assuming img_id and img_size are lists of tensors
+                img_id_i = img_id[idx]
+                img_size_i = img_size[idx]
+                height, width = img_size_i # Assuming img_size_i is a scalar tensor
+                for loc_, label_, prob_ in zip(ploc_i, plabel_i, pprob_i):
+                     detections.append([img_id_i, loc_[0] * width, loc_[1] * height, (loc_[2] - loc_[0]) * width,
+                           (loc_[3] - loc_[1]) * height, prob_,
+                           category_ids[int(label_.item()) - 1]])
+            # for idx in range(ploc.shape[0]):
+            #     ploc_i = ploc[idx, :, :].unsqueeze(0)
+            #     plabel_i = plabel[idx, :, :].unsqueeze(0)
+            #     try:
+            #         result = encoder.decode_batch(ploc_i, plabel_i, nms_threshold, 200)[0]
+            #     except:
+            #         print("No object detected in idx: {}".format(idx))
+            #         continue
+            #     if img_size is None: #change
+            #         continue     
+            #     height, width = img_size[idx]                
+            #     loc, label, prob = [r.cpu().numpy() for r in result]
+            #     for loc_, label_, prob_ in zip(loc, label, prob):
+            #         detections.append([img_id[idx], loc_[0] * width, loc_[1] * height, (loc_[2] - loc_[0]) * width,
+            #                         (loc_[3] - loc_[1]) * height, prob_,
+            #                         category_ids[label_ - 1]])
 
     detections = np.array(detections, dtype=np.float32)
     print(inf_time,"seconds")
