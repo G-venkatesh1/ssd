@@ -55,6 +55,8 @@ def evaluate(model, test_loader, epoch, writer, encoder, nms_threshold, mtype,rt
             sess_options = ort.SessionOptions()
             sess_options.enable_profiling = True
             sess_options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_DISABLE_ALL
+            # To enable model serialization after graph optimization set this
+            sess_options.optimized_model_filepath = "optimized_model_ff.onnx"
             providers = ["CPUExecutionProvider"]
             model = ort.InferenceSession("optimized_model_ff.onnx",providers=["CPUExecutionProvider"],sess_options=sess_options)
             # model  =  ort.InferenceSession(config["Model_onnx"], providers=providers)
