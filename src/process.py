@@ -12,7 +12,7 @@ import argparse
 import tvm
 from tvm import relay
 from tvm.contrib import graph_executor
-
+import time
 
 def read_config(config_path):
     with open(config_path, "r") as file:
@@ -89,6 +89,7 @@ def evaluate(model, test_loader, epoch, writer, encoder, nms_threshold, mtype,rt
                 mod = remote.load_module("model.tar")
                 module = graph_executor.GraphModule(mod["default"](dev))      
     detections = []
+    inf_time = 0.0
     category_ids = test_loader.dataset.coco.getCatIds()
     for nbatch, (img, img_id, img_size, _) in enumerate(test_loader):   
         print("Parsing batch: {}/{}".format(nbatch, len(test_loader)), end="\r")
@@ -119,7 +120,7 @@ def evaluate(model, test_loader, epoch, writer, encoder, nms_threshold, mtype,rt
                     ort_outs = model.run([], {ort_inputs: img.numpy()})    
                 ploc = torch.tensor(ort_outs[0]).cuda()
                 plabel = torch.tensor(ort_outs[1]).cuda()
-                print(len(ploc),len(plabel))
+                # print(len(ploc),len(plabel))
             elif rt == "tvm":
                 if mtype == "evaluate_tvm":
                     img = img.cpu()
@@ -136,7 +137,10 @@ def evaluate(model, test_loader, epoch, writer, encoder, nms_threshold, mtype,rt
                     ploc = torch.tensor(output1_np).cuda()
                     plabel = torch.tensor(output2_np).cuda()
             elif rt == "val":
+                start_time = time.time()
                 ploc, plabel = model(img)
+                end_time = time.time()
+                inf_time = inf_time + (end_time-start_time)
                 ploc, plabel = ploc.float(), plabel.float()
             for idx in range(ploc.shape[0]):
                 ploc_i = ploc[idx, :, :].unsqueeze(0)
@@ -156,7 +160,7 @@ def evaluate(model, test_loader, epoch, writer, encoder, nms_threshold, mtype,rt
                                     category_ids[label_ - 1]])
 
     detections = np.array(detections, dtype=np.float32)
-
+    print(inf_time,"seconds")
     coco_eval = COCOeval(test_loader.dataset.coco, test_loader.dataset.coco.loadRes(detections), iouType="bbox")
     coco_eval.evaluate()
     coco_eval.accumulate()
