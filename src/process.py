@@ -120,7 +120,7 @@ def evaluate(model, test_loader, epoch, writer, encoder, nms_threshold, mtype,rt
                     ort_outs = model.run([], {ort_inputs: img.numpy()})    
                 ploc = torch.tensor(ort_outs[0]).cuda()
                 plabel = torch.tensor(ort_outs[1]).cuda()
-                # print(len(ploc),len(plabel))
+                print(len(ploc),len(plabel))
             elif rt == "tvm":
                 if mtype == "evaluate_tvm":
                     img = img.cpu()
