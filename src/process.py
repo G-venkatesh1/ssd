@@ -99,9 +99,9 @@ def evaluate(model, test_loader, epoch, writer, encoder, nms_threshold, mtype,rt
             if img is None: #change
                 continue
             img = img.cuda()
+        t1,t2=0.0,0.0
         with torch.no_grad():
             if rt == "Onnxruntime":
-                t1,t2=0.0,0.0
                 print("ONNXRT")
                 if mtype == "fp32_model":
                     img = img.cpu()

@@ -1,4 +1,4 @@
-Model_onnx: 'SSDRes50.onnx'
+Model_onnx: 'SSDRes50_FP32.onnx'
 model_fp16: 'SSDRes50_FP16.onnx'
 Model_quant: 'SSDRes50_quant.onnx'
 image_dir: "datasets_coco/images/"
