@@ -101,17 +101,13 @@ def evaluate(model, test_loader, epoch, writer, encoder, nms_threshold, mtype,rt
             if img is None: #change
                 continue
             img = img.cuda()
-        t1,t2=0.0,0.0
         with torch.no_grad():
             if rt == "Onnxruntime":
                 print("ONNXRT")
                 if mtype == "fp32_model":
                     img = img.cpu()
                     ort_inputs = model.get_inputs()[0].name
-                    t1=t1+time.time()
                     ort_outs = model.run([], {ort_inputs: img.numpy()})
-                    t2=t2+time.time()
-                    model.end_profiling()
                 elif mtype == "fp16_model":
                     img_np_float16 = img.cpu().numpy().astype(np.float16)
                     ort_inputs = {model.get_inputs()[0].name: img_np_float16}
@@ -164,7 +160,7 @@ def evaluate(model, test_loader, epoch, writer, encoder, nms_threshold, mtype,rt
 
     detections = np.array(detections, dtype=np.float32)
     # print(f"\r{index + 1}/{num}", end="", flush=True)
-    print(f'Time Taken: {((t2 - t1) /test_loader)*1000:.2f} ms')
+    # print(f'Time Taken: {((t2 - t1) /test_loader)*1000:.2f} ms')
     coco_eval = COCOeval(test_loader.dataset.coco, test_loader.dataset.coco.loadRes(detections), iouType="bbox")
     coco_eval.evaluate()
     coco_eval.accumulate()
