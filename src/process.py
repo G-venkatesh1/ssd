@@ -1,6 +1,3 @@
-"""
-@author: Viet Nguyen <nhviet1009@gmail.com>
-"""
 import numpy as np
 from tqdm.autonotebook import tqdm
 import torch
@@ -12,7 +9,7 @@ import argparse
 import tvm
 from tvm import relay
 from tvm.contrib import graph_executor
-
+import time
 
 def read_config(config_path):
     with open(config_path, "r") as file:
@@ -55,8 +52,12 @@ def evaluate(model, test_loader, epoch, writer, encoder, nms_threshold, mtype,rt
     if rt == "Onnxruntime":
         if mtype == "fp32_model":
             print("fp32 rt")
+            sess_options = ort.SessionOptions()
+            sess_options.enable_profiling = True
+            sess_options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_DISABLE_ALL
             providers = ["CPUExecutionProvider"]
-            model  =  ort.InferenceSession(config["Model_onnx"], providers=providers)
+            model = ort.InferenceSession("optimized_model_ff.onnx",providers=["CPUExecutionProvider"],sess_options=sess_options)
+            # model  =  ort.InferenceSession(config["Model_onnx"], providers=providers)
         elif mtype == "fp16_model":   
             print("fp16 rt")
             providers = ["CPUExecutionProvider"]
@@ -79,7 +80,7 @@ def evaluate(model, test_loader, epoch, writer, encoder, nms_threshold, mtype,rt
             tvm_config = deploy_cfg["tvm_config"]
             if not (host and port):
                 dev = tvm.device(str(tvm_config["targets"][0]), 0)
-                # print(dev)
+                print(dev)
                 lib: tvm.runtime.Module = tvm.runtime.load_module("tvm/SSDRes50_quant.tar")
                 module = graph_executor.GraphModule(lib["default"](dev))
             else:
@@ -100,11 +101,15 @@ def evaluate(model, test_loader, epoch, writer, encoder, nms_threshold, mtype,rt
             img = img.cuda()
         with torch.no_grad():
             if rt == "Onnxruntime":
+                t1,t2=0.0,0.0
                 print("ONNXRT")
                 if mtype == "fp32_model":
                     img = img.cpu()
                     ort_inputs = model.get_inputs()[0].name
+                    t1=t1+time.time()
                     ort_outs = model.run([], {ort_inputs: img.numpy()})
+                    t2=t2+time.time()
+                    model.end_profiling()
                 elif mtype == "fp16_model":
                     img_np_float16 = img.cpu().numpy().astype(np.float16)
                     ort_inputs = {model.get_inputs()[0].name: img_np_float16}
@@ -135,26 +140,29 @@ def evaluate(model, test_loader, epoch, writer, encoder, nms_threshold, mtype,rt
                     ploc = torch.tensor(output1_np).cuda()
                     plabel = torch.tensor(output2_np).cuda()
             elif rt == "val":
-                ploc, loc,label,prob = model(img)
-            for idx in range(len(ploc)):
-                ploc_i = loc[idx]
-                plabel_i = label[idx]
-                pprob_i = prob[idx]
-    
-    # Assuming img_id and img_size are lists of tensors
-                img_id_i = img_id[idx]
-                img_size_i = img_size[idx]
-    
-                height, width = img_size_i # Assuming img_size_i is a scalar tensor
-    
-                for loc_, label_, prob_ in zip(ploc_i, plabel_i, pprob_i):
-                     detections.append([img_id_i, loc_[0] * width, loc_[1] * height, (loc_[2] - loc_[0]) * width,
-                           (loc_[3] - loc_[1]) * height, prob_,
-                           category_ids[int(label_.item()) - 1]])
-
+                ploc, plabel = model(img)
+                ploc, plabel = ploc.float(), plabel.float()
+            for idx in range(ploc.shape[0]):
+                ploc_i = ploc[idx, :, :].unsqueeze(0)
+                plabel_i = plabel[idx, :, :].unsqueeze(0)
+                # try:
+                result = encoder.decode_batch(ploc_i, plabel_i, nms_threshold, 200)[0]
+                # except:
+                    # print("No object detected in idx: {}".format(idx))
+                    # continue
+                if img_size is None: #change
+                    print("no image")
+                    continue     
+                height, width = img_size[idx]                
+                loc, label, prob = [r.cpu().numpy() for r in result]
+                for loc_, label_, prob_ in zip(loc, label, prob):
+                    detections.append([img_id[idx], loc_[0] * width, loc_[1] * height, (loc_[2] - loc_[0]) * width,
+                                    (loc_[3] - loc_[1]) * height, prob_,
+                                    category_ids[label_ - 1]])
 
     detections = np.array(detections, dtype=np.float32)
-
+    # print(f"\r{index + 1}/{num}", end="", flush=True)
+    print(f'Time Taken: {((t2 - t1) /test_loader)*1000:.2f} ms')
     coco_eval = COCOeval(test_loader.dataset.coco, test_loader.dataset.coco.loadRes(detections), iouType="bbox")
     coco_eval.evaluate()
     coco_eval.accumulate()
