@@ -1,15 +1,18 @@
+"""
+@author: Viet Nguyen <nhviet1009@gmail.com>
+"""
 import numpy as np
 from tqdm.autonotebook import tqdm
 import torch
 from pycocotools.cocoeval import COCOeval
-# from apex import amp
+from apex import amp
 import onnxruntime as ort
 import yaml
 import argparse
 import tvm
 from tvm import relay
 from tvm.contrib import graph_executor
-import time
+
 
 def read_config(config_path):
     with open(config_path, "r") as file:
@@ -52,13 +55,7 @@ def evaluate(model, test_loader, epoch, writer, encoder, nms_threshold, mtype,rt
     if rt == "Onnxruntime":
         if mtype == "fp32_model":
             print("fp32 rt")
-            # sess_options = ort.SessionOptions()
-            # sess_options.enable_profiling = True
-            # sess_options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_DISABLE_ALL
-            # To enable model serialization after graph optimization set this
-            # sess_options.optimized_model_filepath = "/kaggle/working/optimized_model_ff.onnx"
             providers = ["CPUExecutionProvider"]
-            # model = ort.InferenceSession("optimized_model_ff.onnx",providers=["CPUExecutionProvider"],sess_options=sess_options)
             model  =  ort.InferenceSession(config["Model_onnx"], providers=providers)
         elif mtype == "fp16_model":   
             print("fp16 rt")
@@ -143,13 +140,12 @@ def evaluate(model, test_loader, epoch, writer, encoder, nms_threshold, mtype,rt
             for idx in range(ploc.shape[0]):
                 ploc_i = ploc[idx, :, :].unsqueeze(0)
                 plabel_i = plabel[idx, :, :].unsqueeze(0)
-                # try:
-                result = encoder.decode_batch(ploc_i, plabel_i, nms_threshold, 200)[0]
-                # except:
-                    # print("No object detected in idx: {}".format(idx))
-                    # continue
+                try:
+                    result = encoder.decode_batch(ploc_i, plabel_i, nms_threshold, 200)[0]
+                except:
+                    print("No object detected in idx: {}".format(idx))
+                    continue
                 if img_size is None: #change
-                    print("no image")
                     continue     
                 height, width = img_size[idx]                
                 loc, label, prob = [r.cpu().numpy() for r in result]
@@ -159,11 +155,12 @@ def evaluate(model, test_loader, epoch, writer, encoder, nms_threshold, mtype,rt
                                     category_ids[label_ - 1]])
 
     detections = np.array(detections, dtype=np.float32)
-    # print(f"\r{index + 1}/{num}", end="", flush=True)
-    # print(f'Time Taken: {((t2 - t1) /test_loader)*1000:.2f} ms')
+
     coco_eval = COCOeval(test_loader.dataset.coco, test_loader.dataset.coco.loadRes(detections), iouType="bbox")
     coco_eval.evaluate()
     coco_eval.accumulate()
     coco_eval.summarize()
 
     writer.add_scalar("Test/mAP", coco_eval.stats[0], epoch)
+
+
